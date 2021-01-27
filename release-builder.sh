@@ -8,38 +8,41 @@ GIT_TOKEN=$1
 WORK_DIR=$2
 GIT_USERNAME="ThilinaManamgoda"
 GIT_EMAIL="maanafunedu@gmail.com"
+CHART_YAML="${WORK_DIR}/Chart.yaml"
 
 # Login to github cli with token.
 echo $GIT_TOKEN | gh auth login --with-token
 
-# Read current verion from the Chart.yaml
-CURRENT_VERSION_TMP=$(grep 'version:' Chart.yaml)
-CURRENT_VERSION=${CURRENT_VERSION_TMP//*version: /}
+# Read current tag version from the Chart.yaml
+CURRENT_TAG_VERSION_TMP=$(grep 'version:' "${CHART_YAML}")
+CURRENT_TAG_VERSION=${CURRENT_TAG_VERSION_TMP//*version: /}
 
-echo ${CURRENT_VERSION}
-## Read current version for the release tag.
-#CURRENT_VERSION=$(jq -r '.release_tag_version' $WORK_DIR/release-info.json)
-#
-## Set current version for the release tag.
-#TAG=v$CURRENT_VERSION
-#TAG_NAME=helm-charts-v$CURRENT_VERSION
-#
+echo "Current tag version: ${CURRENT_TAG_VERSION}"
+
 ## Increment tag version to next tag version.
-#MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
-#MINOR=$(echo $CURRENT_VERSION | cut -d. -f2)
-#PATCH=$(echo $CURRENT_VERSION | cut -d. -f3)
-#PATCH=$(expr $PATCH + 1)
-#NEW_RELEASE_TAG_VERSION=$MAJOR.$MINOR.$PATCH
-#
-## Update the next version number in release-info.json.
-#VERSION_UPDATE="$(jq --arg version "$NEW_RELEASE_TAG_VERSION" '.release_tag_version = $version' $WORK_DIR/release-info.json)" && echo "${VERSION_UPDATE}" > $WORK_DIR/release-info.json
-#
-## Push new release version to release-info.json.
-#git -C $WORK_DIR config user.email "$GIT_EMAIL"
-#git -C $WORK_DIR config user.name "$GIT_USERNAME"
-#git -C $WORK_DIR add $WORK_DIR/release-info.json
-#git -C $WORK_DIR commit -m "Update release tag version to - $NEW_RELEASE_TAG_VERSION"
-#git -C $WORK_DIR push
-#
-## Release the tag including zip from base branch.
-#gh release create --target base --title "$TAG_NAME" -n "" "$TAG";
+MAJOR=$(echo $CURRENT_TAG_VERSION | cut -d. -f1)
+MINOR=$(echo $CURRENT_TAG_VERSION | cut -d. -f2)
+PATCH=$(echo $CURRENT_TAG_VERSION | cut -d. -f3)
+PATCH=$(expr $PATCH + 1)
+NEW_RELEASE_TAG_VERSION=$MAJOR.$MINOR.$PATCH
+
+echo "New release tag version: ${CURRENT_TAG_VERSION}"
+
+# Set new release tag.
+NEW_RELEASE_TAG="v${NEW_RELEASE_TAG_VERSION}"
+TAG_NAME="test-github-action-v${NEW_RELEASE_TAG_VERSION}"
+
+echo "New release tag: ${NEW_RELEASE_TAG}"
+echo "New release tag name: ${TAG_NAME}"
+
+# Push new release version to Chart.yaml
+sed -i "s/version: ${CURRENT_TAG_VERSION}/version: ${NEW_RELEASE_TAG_VERSION}/" "${CHART_YAML}"
+
+git -C $WORK_DIR config user.email "$GIT_EMAIL"
+git -C $WORK_DIR config user.name "$GIT_USERNAME"
+git -C $WORK_DIR add "${CHART_YAML}"
+git -C $WORK_DIR commit -m "Update release tag version to - $NEW_RELEASE_TAG_VERSION"
+git -C $WORK_DIR push
+
+# Release the tag including zip from base branch.
+gh release create --target base --title "${TAG_NAME}" -n "" "${NEW_RELEASE_TAG}";
