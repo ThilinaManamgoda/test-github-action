@@ -26,7 +26,7 @@ PATCH=$(echo $CURRENT_TAG_VERSION | cut -d. -f3)
 PATCH=$(expr $PATCH + 1)
 NEW_RELEASE_TAG_VERSION=$MAJOR.$MINOR.$PATCH
 
-echo "New release tag version: ${CURRENT_TAG_VERSION}"
+echo "New release tag version: ${NEW_RELEASE_TAG_VERSION}"
 
 # Set new release tag.
 NEW_RELEASE_TAG="v${NEW_RELEASE_TAG_VERSION}"
@@ -41,8 +41,8 @@ sed -i "s/version: ${CURRENT_TAG_VERSION}/version: ${NEW_RELEASE_TAG_VERSION}/" 
 git -C $WORK_DIR config user.email "$GIT_EMAIL"
 git -C $WORK_DIR config user.name "$GIT_USERNAME"
 git -C $WORK_DIR add "${CHART_YAML}"
-git -C $WORK_DIR commit -m "Update release tag version to - $NEW_RELEASE_TAG_VERSION"
+git -C $WORK_DIR commit -m "Update release version to - $NEW_RELEASE_TAG_VERSION"
 git -C $WORK_DIR push
 
 # Release the tag including zip from base branch.
-gh release create --target base --title "${TAG_NAME}" -n "" "${NEW_RELEASE_TAG}";
+gh release create --target master --title "${TAG_NAME}" -n "" "${NEW_RELEASE_TAG}";
