@@ -12,6 +12,11 @@ GIT_EMAIL="maanafunedu@gmail.com"
 # Login to github cli with token.
 echo $GIT_TOKEN | gh auth login --with-token
 
+# Read current verion from the Chart.yaml
+CURRENT_VERSION_TMP=$(grep 'version:' Chart.yaml)
+CURRENT_VERSION=${CURRENT_VERSION_TMP//*version: /}
+
+echo ${CURRENT_VERSION}
 ## Read current version for the release tag.
 #CURRENT_VERSION=$(jq -r '.release_tag_version' $WORK_DIR/release-info.json)
 #
